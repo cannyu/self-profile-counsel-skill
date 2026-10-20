@@ -1,6 +1,10 @@
-# Persona Profile Skill
+# Self Profile Counsel Skill
 
 一个把可复用人物画像工作流与私有个人数据分离的 Codex 插件。
+
+An agent skill that incrementally builds an evolving self-profile and provides
+personal decisions, small decision support, growth suggestions, and privacy-aware
+profile maintenance. Integration with cost-effective life guidance is planned.
 
 插件提供：
 
