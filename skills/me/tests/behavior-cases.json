@@ -248,7 +248,7 @@
       ]
     },
     {
-      "id": "legacy-source-read-only",
+      "id": "source-document-read-only",
       "category": "update",
       "prompt": "把新出现的工作偏好直接追加到旧的职业专项档案末尾。",
       "expect": "activate",
@@ -256,7 +256,7 @@
         "写入 work_career 对应子模块和 evidence ledger"
       ],
       "must_not": [
-        "在 compatibility 阶段继续修改 legacy source"
+        "继续修改 source_documents 中的迁移来源"
       ]
     }
   ]

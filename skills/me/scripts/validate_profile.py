@@ -350,6 +350,10 @@ def validate_module_document(
         f"{relative_path}: migration_status 无效",
     )
     report.check(
+        bool(data.get("source_documents") or data.get("legacy_sources")),
+        f"{relative_path}: 必须包含 source_documents 或 legacy_sources",
+    )
+    report.check(
         bool(VERSION_RE.fullmatch(data.get("version", ""))),
         f"{relative_path}: version 必须是 1.0 或 v2.0 形式",
     )
@@ -359,6 +363,10 @@ def validate_module_document(
         relative_path,
         text,
         contract["module_required_sections"],
+    )
+    report.check(
+        "来源文档" in text or "兼容来源" in text,
+        f"{relative_path}: 缺少来源文档章节",
     )
 
 
@@ -436,17 +444,21 @@ def validate_profile_index(
                 report,
             )
 
+        source_documents = module.get("source_documents")
         legacy_sources = module.get("legacy_sources")
+        configured_sources = (
+            source_documents if source_documents is not None else legacy_sources
+        )
         report.check(
-            isinstance(legacy_sources, list)
+            isinstance(configured_sources, list)
             and all(
                 isinstance(source, str) and source.strip()
-                for source in legacy_sources
+                for source in configured_sources
             ),
-            f"{prefix}.legacy_sources 必须是非空字符串数组",
+            f"{prefix}.source_documents 必须是非空字符串数组",
         )
-        if isinstance(legacy_sources, list):
-            for source in legacy_sources:
+        if isinstance(configured_sources, list):
+            for source in configured_sources:
                 if isinstance(source, str) and source.strip():
                     report.check(
                         (profile_root / source).is_file(),

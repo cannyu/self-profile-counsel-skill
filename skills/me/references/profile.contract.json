@@ -14,9 +14,6 @@
   "profile_required_files": [
     "profile.index.json",
     "README.md",
-    "人物画像.md",
-    "建议总览.md",
-    "行动清单.md",
     "更新日志.md",
     ".gitignore",
     "evidence/schema.json",
@@ -26,7 +23,9 @@
     "views/migration-report.md"
   ],
   "required_directories": [
-    "专项档案"
+    "modules",
+    "evidence",
+    "views"
   ],
   "profile_frontmatter_required": [
     "last_updated",
@@ -103,13 +102,11 @@
     "module_id",
     "version",
     "last_updated",
-    "migration_status",
-    "legacy_sources"
+    "migration_status"
   ],
   "module_required_sections": [
     "模块目的",
     "子模块",
-    "兼容来源",
     "迁移边界"
   ],
   "migration_statuses": [
@@ -127,7 +124,8 @@
     "action",
     "self_report",
     "self_narrative",
-    "inference"
+    "inference",
+    "source_document"
   ],
   "record_statuses": [
     "已确认",

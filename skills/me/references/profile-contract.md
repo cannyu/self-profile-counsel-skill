@@ -14,7 +14,7 @@ python3 scripts/validate_profile.py \
 - `modules/`：九个 V3 内容模块及健康子模块。
 - `evidence/ledger.json`：新事实、偏好、目标、约束、决定和推测。
 - `views/`：从模块派生的状态、风险和迁移视图，不是独立事实源。
-- `人物画像.md`、`专项档案/`：迁移完成前的 legacy 兼容事实来源。
+- `modules/_sources/`：迁移后的原始来源文档，只读保留事实和追溯关系。
 - `建议总览.md`：当前优先级，不保存所有历史建议。
 - `行动清单.md`：当前动作，不代替事实档案。
 - `更新日志.md`：目录级变更记录。
@@ -35,8 +35,8 @@ python3 scripts/validate_profile.py \
 `health_wellbeing` 必须包含 `physical`、`mental`、`sleep_energy`、
 `lifestyle` 和 `care_management`。
 
-兼容阶段中，事实只在一处维护：V3 模块保存新摘要和边界，legacy source
-保存尚未迁移的详细内容，不得把同一事实复制到多个模块。
+迁移完成后，事实只在一处维护：模块文档定义结构与摘要，`source_documents`
+保存详细来源；不得把同一事实复制到多个模块。
 
 ## 信息层级
 
@@ -70,7 +70,7 @@ python3 scripts/validate_profile.py \
 3. 来源冲突时保留冲突，不得只保留更有利或更顺畅的版本。
 4. 修改重大结论时保留旧版本或变更日志，不静默覆盖。
 5. 新事实、偏好、目标、约束和推测写入 `evidence/ledger.json`，并同步相关模块摘要。
-6. compatibility/partial 模块中的 legacy source 在迁移完成前保持只读。
+6. `source_documents` 和 compatibility/partial 模块中的 legacy source 默认只读。
 7. 更新后追加 `更新日志.md`；影响长期约束时同步更新派生视图。
 8. 删除或外传敏感内容需要用户明确授权，不能从普通分析请求中推断。
 
@@ -81,7 +81,7 @@ python3 scripts/validate_profile.py \
 - `id`
 - `module` 与 `submodule`
 - `type`：fact、preference、goal、constraint、event、decision、action、
-  self_report、self_narrative 或 inference
+  self_report、self_narrative、inference 或 source_document
 - `statement`
 - `source`
 - `observed_at` 与 `last_verified`

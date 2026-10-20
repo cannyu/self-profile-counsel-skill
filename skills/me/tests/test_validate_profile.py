@@ -94,17 +94,17 @@ class ValidateProfileTests(unittest.TestCase):
             VALID_PROFILE.resolve(),
         )
 
-    def test_missing_domain_directory_is_reported(self) -> None:
+    def test_missing_modules_directory_is_reported(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             profile = copy_valid_profile(Path(temporary))
-            (profile / "专项档案").rename(profile / "专项档案-renamed")
+            (profile / "modules").rename(profile / "modules-renamed")
 
             result = run_validator(profile)
 
             self.assertEqual(result.returncode, 1)
             report = json.loads(result.stdout)
             self.assertTrue(
-                any("专项档案" in error for error in report["errors"]),
+                any("modules" in error for error in report["errors"]),
                 report["errors"],
             )
 
@@ -219,6 +219,68 @@ class ValidateProfileTests(unittest.TestCase):
                 any("missing-source.md" in error for error in report["errors"]),
                 report["errors"],
             )
+
+    def test_source_documents_field_is_supported(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            profile = copy_valid_profile(Path(temporary))
+            index_path = profile / "profile.index.json"
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            first_module = index["modules"][0]
+            first_module["source_documents"] = first_module.pop("legacy_sources")
+            first_module["migration_status"] = "complete"
+            index_path.write_text(
+                json.dumps(index, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            module_path = profile / first_module["path"]
+            module_text = module_path.read_text(encoding="utf-8")
+            module_path.write_text(
+                module_text.replace(
+                    "legacy_sources:",
+                    "source_documents:",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+            result = run_validator(profile)
+
+            self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+
+    def test_source_document_evidence_record_is_supported(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            profile = copy_valid_profile(Path(temporary))
+            ledger_path = profile / "evidence" / "ledger.json"
+            ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+            ledger["records"].append(
+                {
+                    "id": "source.core.001",
+                    "module": "identity_context",
+                    "submodule": "basic_identity",
+                    "type": "source_document",
+                    "statement": "Imported fictional source document",
+                    "source": {
+                        "kind": "imported_document",
+                        "location": "人物画像.md",
+                    },
+                    "observed_at": "2026-10-21",
+                    "last_verified": "2026-10-21",
+                    "status": "已确认",
+                    "confidence": "high",
+                    "sensitivity": "private",
+                    "allowed_uses": ["personal_decision"],
+                    "linked_modules": ["identity_context"],
+                    "boundary": "Preserves provenance only",
+                }
+            )
+            ledger_path.write_text(
+                json.dumps(ledger, ensure_ascii=False),
+                encoding="utf-8",
+            )
+
+            result = run_validator(profile)
+
+            self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
 
     def test_missing_gitignore_is_reported(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

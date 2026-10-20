@@ -33,13 +33,13 @@ metadata:
 | `modules/90_timeline_actions.md` | 事件、未决问题、承诺、行动和结果 | 进度、复盘、执行、关键经历 |
 | `evidence/ledger.json` | V3 结构化事实、偏好、目标和推测 | 需要引用新写入信息时 |
 | `views/` | 从模块生成的状态、风险和迁移视图 | 需要概览时；不得当作独立事实源 |
-| legacy source | 模块索引中配置的现有专项档案 | 仅在该模块仍为 compatibility/partial 时读取 |
+| module source document | 模块索引中配置的 `source_documents` | 需要模块内详细事实时读取 |
 | `历史分析/`、`历史归档/` | 旧判断和重构前快照 | **仅在追溯旧结论时读；默认不读** |
 
 **上下文原则**：
 
 1. 先读 `profile.index.json`，再读与问题相关的模块和子模块。
-2. compatibility 模块先从 legacy source 取详细事实，再回到 V3 模块理解边界。
+2. `complete` 模块读取模块文档和其 `source_documents`；`compatibility` 模块才使用 `legacy_sources`。
 3. 一次只加载相关模块，不把所有模块和专项档案拼进上下文。
 4. `views/`、建议和行动是派生结果，不得反过来覆盖事实模块。
 5. `历史归档/` 和 `历史分析/` 不作为现状依据。
@@ -103,7 +103,7 @@ python3 scripts/validate_profile.py \
 - 用户说「更新画像」时不要猜：先列出你认为需要更新的条目，确认后再写。
 - 写回后，在回答末尾用一行说明改了哪些文件。
 - 不确定是否可靠的信息，标 `❓`，不要直接写进事实层。
-- compatibility/partial 模块中的 legacy source 在未完成迁移前保持只读；新事实不要继续堆入旧专项档案。
+- `source_documents` 和 compatibility/partial 模块中的 legacy source 默认只读；新事实不要继续堆入旧文档。
 - 新的事实、偏好、目标、约束和推测优先写成 `evidence/ledger.json` 记录，并在对应模块维护必要摘要。
 - 完成结构性更新后运行 `python3 scripts/validate_profile.py --profile-root "${PERSONA_PROFILE_ROOT:-$HOME/workspace/人物画像}"`；校验失败时先修复，不把失败状态说成已完成。
 - 行为回归用例位于 `tests/behavior-cases.json`；修改触发范围、更新协议或隐私边界时同步维护。
