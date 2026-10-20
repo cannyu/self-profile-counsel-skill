@@ -1,0 +1,99 @@
+{
+  "schema_version": 2,
+  "plugin_required_files": [
+    ".codex-plugin/plugin.json",
+    "skills/me/SKILL.md",
+    "skills/me/agents/openai.yaml",
+    "skills/me/references/profile-contract.md",
+    "skills/me/references/profile.contract.json",
+    "skills/me/scripts/validate_profile.py",
+    "skills/me/tests/behavior-cases.json",
+    "skills/me/tests/fixtures/valid-profile/人物画像.md"
+  ],
+  "profile_required_files": [
+    "README.md",
+    "人物画像.md",
+    "建议总览.md",
+    "行动清单.md",
+    "更新日志.md",
+    ".gitignore"
+  ],
+  "required_directories": [
+    "专项档案"
+  ],
+  "profile_frontmatter_required": [
+    "last_updated",
+    "version",
+    "visibility"
+  ],
+  "domain_frontmatter_required": [
+    "last_updated",
+    "version",
+    "purpose",
+    "visibility",
+    "source"
+  ],
+  "main_required_sections": [
+    "领域入口",
+    "基本盘",
+    "长期方向",
+    "当前阶段",
+    "跨领域约束",
+    "关键经历",
+    "自我叙事层",
+    "优势、劣势与假设",
+    "待确认",
+    "维护规则",
+    "变更日志"
+  ],
+  "domain_required_section_groups": [
+    [
+      "当前摘要",
+      "当前快照"
+    ],
+    [
+      "待确认",
+      "待确认清单"
+    ],
+    [
+      "变更日志"
+    ]
+  ],
+  "readme_required_sections": [
+    "目录结构",
+    "按问题读取",
+    "更新规则",
+    "隐私"
+  ],
+  "allowed_evidence_layers": [
+    "已确认事实",
+    "本人判断",
+    "自我叙事",
+    "AI 推测",
+    "待确认",
+    "历史归档"
+  ],
+  "uncertainty_marker": "❓",
+  "privacy": {
+    "required_visibility_marker": "禁止外传",
+    "required_gitignore_patterns": [
+      ".DS_Store",
+      "*.pdf",
+      "参考/",
+      "资料/简历/"
+    ]
+  },
+  "behavior_eval": {
+    "min_cases": 10,
+    "max_cases": 20,
+    "required_categories": [
+      "routing",
+      "evidence",
+      "update",
+      "privacy",
+      "conflict",
+      "timeliness",
+      "boundary"
+    ]
+  }
+}

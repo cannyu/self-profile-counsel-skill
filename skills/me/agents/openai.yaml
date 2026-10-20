@@ -1,0 +1,4 @@
+interface:
+  display_name: "Me 个人决策顾问"
+  short_description: "基于本人长期维护的人物画像，回答职业、财务、健康与家庭类决策问题"
+  default_prompt: "/me 帮我判断一下这件事"

@@ -1,0 +1,23 @@
+{
+  "name": "persona-profile-skill",
+  "version": "0.1.0",
+  "description": "基于独立本地人物档案的可复用个人决策 Skill。",
+  "author": {
+    "name": "Persona Profile Skill Contributors"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Persona Profile Skill",
+    "shortDescription": "用长期维护的人物档案回答个人决策问题",
+    "longDescription": "通过独立的本地人物档案提供决策、规划、画像更新和隐私边界管理，并将可复用指令与私有运行数据分离。",
+    "developerName": "Persona Profile Skill Contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "用 /me 依据我的人物档案判断这件事。"
+    ]
+  }
+}
