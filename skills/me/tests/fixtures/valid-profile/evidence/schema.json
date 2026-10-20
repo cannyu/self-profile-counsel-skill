@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Persona Profile Evidence Ledger",
+  "type": "object",
+  "required": ["schema_version", "records"],
+  "properties": {
+    "schema_version": {"const": 3},
+    "records": {"type": "array"}
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "plugin_required_files": [
     ".codex-plugin/plugin.json",
     "skills/me/SKILL.md",
@@ -8,15 +8,22 @@
     "skills/me/references/profile.contract.json",
     "skills/me/scripts/validate_profile.py",
     "skills/me/tests/behavior-cases.json",
+    "skills/me/tests/fixtures/valid-profile/profile.index.json",
     "skills/me/tests/fixtures/valid-profile/人物画像.md"
   ],
   "profile_required_files": [
+    "profile.index.json",
     "README.md",
     "人物画像.md",
     "建议总览.md",
     "行动清单.md",
     "更新日志.md",
-    ".gitignore"
+    ".gitignore",
+    "evidence/schema.json",
+    "evidence/ledger.json",
+    "views/current-state.md",
+    "views/risk-register.md",
+    "views/migration-report.md"
   ],
   "required_directories": [
     "专项档案"
@@ -74,6 +81,71 @@
     "历史归档"
   ],
   "uncertainty_marker": "❓",
+  "required_module_ids": [
+    "identity_context",
+    "goals_values",
+    "health_wellbeing",
+    "capability_growth",
+    "work_career",
+    "finance_resources",
+    "relationships_care",
+    "behavior_psychology",
+    "timeline_actions"
+  ],
+  "health_required_submodules": [
+    "physical",
+    "mental",
+    "sleep_energy",
+    "lifestyle",
+    "care_management"
+  ],
+  "module_required_frontmatter": [
+    "module_id",
+    "version",
+    "last_updated",
+    "migration_status",
+    "legacy_sources"
+  ],
+  "module_required_sections": [
+    "模块目的",
+    "子模块",
+    "兼容来源",
+    "迁移边界"
+  ],
+  "migration_statuses": [
+    "compatibility",
+    "partial",
+    "complete"
+  ],
+  "record_types": [
+    "fact",
+    "preference",
+    "goal",
+    "constraint",
+    "event",
+    "decision",
+    "action",
+    "self_report",
+    "self_narrative",
+    "inference"
+  ],
+  "record_statuses": [
+    "已确认",
+    "待确认",
+    "冲突",
+    "已过期",
+    "不采用"
+  ],
+  "confidence_levels": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "sensitivity_levels": [
+    "private",
+    "high",
+    "critical"
+  ],
   "privacy": {
     "required_visibility_marker": "禁止外传",
     "required_gitignore_patterns": [

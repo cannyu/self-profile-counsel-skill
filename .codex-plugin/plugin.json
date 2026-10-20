@@ -1,15 +1,15 @@
 {
   "name": "persona-profile-skill",
-  "version": "0.1.0",
-  "description": "基于独立本地人物档案的可复用个人决策 Skill。",
+  "version": "0.2.0+codex.20261020161038",
+  "description": "\u57fa\u4e8e\u4e5d\u6a21\u5757\u4eba\u7269\u6863\u6848\u4e0e\u8bc1\u636e\u8d26\u672c\u7684\u53ef\u590d\u7528\u4e2a\u4eba\u51b3\u7b56 Skill\u3002",
   "author": {
     "name": "Persona Profile Skill Contributors"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "Persona Profile Skill",
-    "shortDescription": "用长期维护的人物档案回答个人决策问题",
-    "longDescription": "通过独立的本地人物档案提供决策、规划、画像更新和隐私边界管理，并将可复用指令与私有运行数据分离。",
+    "shortDescription": "\u7528\u957f\u671f\u7ef4\u62a4\u7684\u4eba\u7269\u6863\u6848\u56de\u7b54\u4e2a\u4eba\u51b3\u7b56\u95ee\u9898",
+    "longDescription": "\u901a\u8fc7\u4e5d\u6a21\u5757\u672c\u5730\u4eba\u7269\u6863\u6848\u3001\u5065\u5eb7\u5b50\u6a21\u5757\u548c\u8bc1\u636e\u8d26\u672c\u63d0\u4f9b\u51b3\u7b56\u3001\u89c4\u5212\u3001\u753b\u50cf\u66f4\u65b0\u4e0e\u9690\u79c1\u8fb9\u754c\u7ba1\u7406\uff0c\u5e76\u517c\u5bb9\u8fc1\u79fb\u5df2\u6709\u6863\u6848\u3002",
     "developerName": "Persona Profile Skill Contributors",
     "category": "Productivity",
     "capabilities": [
@@ -17,7 +17,7 @@
       "Write"
     ],
     "defaultPrompt": [
-      "用 /me 依据我的人物档案判断这件事。"
+      "\u7528 /me \u4f9d\u636e\u6211\u7684\u4eba\u7269\u6863\u6848\u5224\u65ad\u8fd9\u4ef6\u4e8b\u3002"
     ]
   }
 }

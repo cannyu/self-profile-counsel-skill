@@ -13,6 +13,17 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = SKILL_ROOT / "scripts" / "validate_profile.py"
 VALID_PROFILE = SKILL_ROOT / "tests" / "fixtures" / "valid-profile"
+EXPECTED_MODULES = {
+    "identity_context",
+    "goals_values",
+    "health_wellbeing",
+    "capability_growth",
+    "work_career",
+    "finance_resources",
+    "relationships_care",
+    "behavior_psychology",
+    "timeline_actions",
+}
 
 
 def run_validator(
@@ -55,7 +66,8 @@ class ValidateProfileTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
         report = json.loads(result.stdout)
         self.assertTrue(report["ok"])
-        self.assertEqual(report["behavior_case_count"], 16)
+        self.assertEqual(report["behavior_case_count"], 20)
+        self.assertEqual(set(report["modules"]), EXPECTED_MODULES)
 
     def test_environment_selects_profile_root(self) -> None:
         environment = os.environ.copy()
@@ -116,6 +128,95 @@ class ValidateProfileTests(unittest.TestCase):
             report = json.loads(result.stdout)
             self.assertTrue(
                 any("last_updated" in error for error in report["errors"]),
+                report["errors"],
+            )
+
+    def test_missing_mental_submodule_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            profile = copy_valid_profile(Path(temporary))
+            index_path = profile / "profile.index.json"
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            health = next(
+                module
+                for module in index["modules"]
+                if module["id"] == "health_wellbeing"
+            )
+            health["submodules"] = [
+                submodule
+                for submodule in health["submodules"]
+                if submodule["id"] != "mental"
+            ]
+            index_path.write_text(
+                json.dumps(index, ensure_ascii=False),
+                encoding="utf-8",
+            )
+
+            result = run_validator(profile)
+
+            self.assertEqual(result.returncode, 1)
+            report = json.loads(result.stdout)
+            self.assertTrue(
+                any("mental" in error for error in report["errors"]),
+                report["errors"],
+            )
+
+    def test_unknown_evidence_module_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            profile = copy_valid_profile(Path(temporary))
+            ledger_path = profile / "evidence" / "ledger.json"
+            ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+            ledger["records"].append(
+                {
+                    "id": "invalid.001",
+                    "module": "not_a_module",
+                    "submodule": "unknown",
+                    "type": "fact",
+                    "statement": "虚构测试记录",
+                    "source": {
+                        "kind": "user_statement",
+                        "location": "test",
+                    },
+                    "observed_at": "2026-10-21",
+                    "last_verified": "2026-10-21",
+                    "status": "待确认",
+                    "confidence": "medium",
+                    "sensitivity": "private",
+                    "allowed_uses": ["personal_decision"],
+                    "linked_modules": [],
+                    "boundary": "仅用于负向测试",
+                }
+            )
+            ledger_path.write_text(
+                json.dumps(ledger, ensure_ascii=False),
+                encoding="utf-8",
+            )
+
+            result = run_validator(profile)
+
+            self.assertEqual(result.returncode, 1)
+            report = json.loads(result.stdout)
+            self.assertTrue(
+                any("not_a_module" in error for error in report["errors"]),
+                report["errors"],
+            )
+
+    def test_missing_legacy_source_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            profile = copy_valid_profile(Path(temporary))
+            index_path = profile / "profile.index.json"
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            index["modules"][0]["legacy_sources"] = ["missing-source.md"]
+            index_path.write_text(
+                json.dumps(index, ensure_ascii=False),
+                encoding="utf-8",
+            )
+
+            result = run_validator(profile)
+
+            self.assertEqual(result.returncode, 1)
+            report = json.loads(result.stdout)
+            self.assertTrue(
+                any("missing-source.md" in error for error in report["errors"]),
                 report["errors"],
             )
 

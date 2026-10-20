@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -55,7 +56,15 @@ class PluginLayoutTests(unittest.TestCase):
     def test_plugin_has_public_repository_documents(self) -> None:
         self.assertTrue((ME_PLUGIN / "README.md").is_file())
         self.assertTrue((ME_PLUGIN / "LICENSE").is_file())
-        self.assertFalse((ME_PLUGIN / "docs").exists())
+        tracked_docs = subprocess.run(
+            ["git", "ls-files", "docs"],
+            cwd=ME_PLUGIN,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(tracked_docs.returncode, 0, tracked_docs.stderr)
+        self.assertEqual(tracked_docs.stdout.strip(), "")
 
     def test_skill_has_no_personal_examples_or_home_paths(self) -> None:
         production_files = [

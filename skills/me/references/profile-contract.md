@@ -10,15 +10,33 @@ python3 scripts/validate_profile.py \
 
 ## 文件职责
 
-- `SKILL.md`：位于插件中，定义触发条件、读取路由、回答契约、更新协议和隐私边界。
-- `人物画像.md`：跨领域稳定事实、长期目标、关键约束和领域入口。
-- `专项档案/`：职业、健康、家庭、财务、睡眠行为等单一领域事实来源。
+- `profile.index.json`：V3 模块、子模块与 legacy source 的机器路由。
+- `modules/`：九个 V3 内容模块及健康子模块。
+- `evidence/ledger.json`：新事实、偏好、目标、约束、决定和推测。
+- `views/`：从模块派生的状态、风险和迁移视图，不是独立事实源。
+- `人物画像.md`、`专项档案/`：迁移完成前的 legacy 兼容事实来源。
 - `建议总览.md`：当前优先级，不保存所有历史建议。
 - `行动清单.md`：当前动作，不代替事实档案。
 - `更新日志.md`：目录级变更记录。
 - `历史分析/`、`历史归档/`：只用于追溯，默认不作为当前事实。
 
-每个文件只保留一种主要职责。同一事实在专项档案中详细记录，主画像只保留摘要和链接。
+九模块为：
+
+1. `identity_context`
+2. `goals_values`
+3. `health_wellbeing`
+4. `capability_growth`
+5. `work_career`
+6. `finance_resources`
+7. `relationships_care`
+8. `behavior_psychology`
+9. `timeline_actions`
+
+`health_wellbeing` 必须包含 `physical`、`mental`、`sleep_energy`、
+`lifestyle` 和 `care_management`。
+
+兼容阶段中，事实只在一处维护：V3 模块保存新摘要和边界，legacy source
+保存尚未迁移的详细内容，不得把同一事实复制到多个模块。
 
 ## 信息层级
 
@@ -51,8 +69,29 @@ python3 scripts/validate_profile.py \
 2. AI 推测、性格判断和重大结论改为候选条目，先说明证据和不确定性，再等待确认。
 3. 来源冲突时保留冲突，不得只保留更有利或更顺畅的版本。
 4. 修改重大结论时保留旧版本或变更日志，不静默覆盖。
-5. 更新后追加 `更新日志.md`；影响长期约束时同步更新主画像摘要。
-6. 删除或外传敏感内容需要用户明确授权，不能从普通分析请求中推断。
+5. 新事实、偏好、目标、约束和推测写入 `evidence/ledger.json`，并同步相关模块摘要。
+6. compatibility/partial 模块中的 legacy source 在迁移完成前保持只读。
+7. 更新后追加 `更新日志.md`；影响长期约束时同步更新派生视图。
+8. 删除或外传敏感内容需要用户明确授权，不能从普通分析请求中推断。
+
+## V3 记录
+
+每条 evidence record 至少包含：
+
+- `id`
+- `module` 与 `submodule`
+- `type`：fact、preference、goal、constraint、event、decision、action、
+  self_report、self_narrative 或 inference
+- `statement`
+- `source`
+- `observed_at` 与 `last_verified`
+- `status`：已确认、待确认、冲突、已过期、不采用
+- `confidence` 与 `sensitivity`
+- `allowed_uses`
+- `linked_modules`
+- `boundary`
+
+建议和派生的当前状态不能写成 fact。
 
 ## 隐私边界
 

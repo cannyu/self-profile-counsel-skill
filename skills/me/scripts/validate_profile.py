@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 DEFAULT_PROFILE_ROOT = Path.home() / "workspace" / "人物画像"
 FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?)\n---(?:\s*\n|\Z)", re.DOTALL)
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -31,6 +31,15 @@ REQUIRED_CONTRACT_KEYS = {
     "readme_required_sections",
     "allowed_evidence_layers",
     "uncertainty_marker",
+    "required_module_ids",
+    "health_required_submodules",
+    "module_required_frontmatter",
+    "module_required_sections",
+    "migration_statuses",
+    "record_types",
+    "record_statuses",
+    "confidence_levels",
+    "sensitivity_levels",
     "privacy",
     "behavior_eval",
 }
@@ -43,6 +52,8 @@ class Report:
     errors: list[str] = field(default_factory=list)
     checks: int = 0
     behavior_case_count: int = 0
+    evidence_record_count: int = 0
+    modules: set[str] = field(default_factory=set)
 
     def check(self, condition: bool, message: str) -> None:
         self.checks += 1
@@ -174,6 +185,15 @@ def load_contract(skill_root: Path, report: Report) -> dict[str, Any] | None:
         "main_required_sections",
         "readme_required_sections",
         "allowed_evidence_layers",
+        "required_module_ids",
+        "health_required_submodules",
+        "module_required_frontmatter",
+        "module_required_sections",
+        "migration_statuses",
+        "record_types",
+        "record_statuses",
+        "confidence_levels",
+        "sensitivity_levels",
     )
     for field_name in list_fields:
         value = contract.get(field_name)
@@ -289,6 +309,350 @@ def validate_behavior_cases(root: Path, contract: dict[str, Any], report: Report
     )
 
 
+def validate_module_document(
+    profile_root: Path,
+    relative_path: str,
+    module_id: str,
+    contract: dict[str, Any],
+    report: Report,
+    *,
+    submodule_id: str | None = None,
+) -> None:
+    path = profile_root / relative_path
+    if not path.is_file():
+        report.check(False, f"模块文档不存在：{relative_path}")
+        return
+    text = path.read_text(encoding="utf-8")
+    data, error = parse_frontmatter(text)
+    report.check(not error, f"{relative_path}: {error or 'frontmatter 可解析'}")
+    if error:
+        return
+
+    required = list(contract["module_required_frontmatter"])
+    if submodule_id is not None:
+        required.append("submodule_id")
+    missing = [field for field in required if not data.get(field)]
+    report.check(
+        not missing,
+        f"{relative_path}: 模块 frontmatter 缺少字段 {', '.join(missing)}",
+    )
+    report.check(
+        data.get("module_id") == module_id,
+        f"{relative_path}: module_id 必须为 {module_id}",
+    )
+    if submodule_id is not None:
+        report.check(
+            data.get("submodule_id") == submodule_id,
+            f"{relative_path}: submodule_id 必须为 {submodule_id}",
+        )
+    report.check(
+        data.get("migration_status") in contract["migration_statuses"],
+        f"{relative_path}: migration_status 无效",
+    )
+    report.check(
+        bool(VERSION_RE.fullmatch(data.get("version", ""))),
+        f"{relative_path}: version 必须是 1.0 或 v2.0 形式",
+    )
+    validate_date_value(report, data.get("last_updated"), f"{relative_path}.last_updated")
+    validate_required_sections(
+        report,
+        relative_path,
+        text,
+        contract["module_required_sections"],
+    )
+
+
+def validate_profile_index(
+    profile_root: Path,
+    contract: dict[str, Any],
+    report: Report,
+) -> tuple[dict[str, dict[str, Any]], set[tuple[str, str]]]:
+    relative = "profile.index.json"
+    path = profile_root / relative
+    if not path.is_file():
+        report.check(False, f"画像目录缺少必需文件：{relative}")
+        return {}, set()
+    try:
+        index = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        report.check(False, f"{relative}: 无法解析 JSON：{error}")
+        return {}, set()
+
+    report.check(
+        isinstance(index, dict) and index.get("schema_version") == SCHEMA_VERSION,
+        f"{relative}: schema_version 必须为 {SCHEMA_VERSION}",
+    )
+    if not isinstance(index, dict):
+        return {}, set()
+    modules = index.get("modules")
+    report.check(isinstance(modules, list), f"{relative}: modules 必须是数组")
+    if not isinstance(modules, list):
+        return {}, set()
+
+    module_map: dict[str, dict[str, Any]] = {}
+    submodule_map: set[tuple[str, str]] = set()
+    for module_index, module in enumerate(modules):
+        prefix = f"{relative}: modules[{module_index}]"
+        if not isinstance(module, dict):
+            report.check(False, f"{prefix} 必须是对象")
+            continue
+        module_id = module.get("id")
+        report.check(
+            isinstance(module_id, str) and bool(module_id.strip()),
+            f"{prefix}.id 必须是非空字符串",
+        )
+        if not isinstance(module_id, str) or not module_id.strip():
+            continue
+        report.check(
+            module_id not in module_map,
+            f"{relative}: module id 重复：{module_id}",
+        )
+        module_map[module_id] = module
+        report.modules.add(module_id)
+        report.check(
+            isinstance(module.get("name"), str) and bool(module["name"].strip()),
+            f"{prefix}.name 必须是非空字符串",
+        )
+        report.check(
+            module.get("migration_status") in contract["migration_statuses"],
+            f"{prefix}.migration_status 无效",
+        )
+        report.check(
+            module.get("sensitivity") in contract["sensitivity_levels"],
+            f"{prefix}.sensitivity 无效",
+        )
+
+        module_path = module.get("path")
+        report.check(
+            isinstance(module_path, str) and bool(module_path.strip()),
+            f"{prefix}.path 必须是非空字符串",
+        )
+        if isinstance(module_path, str) and module_path.strip():
+            validate_module_document(
+                profile_root,
+                module_path,
+                module_id,
+                contract,
+                report,
+            )
+
+        legacy_sources = module.get("legacy_sources")
+        report.check(
+            isinstance(legacy_sources, list)
+            and all(
+                isinstance(source, str) and source.strip()
+                for source in legacy_sources
+            ),
+            f"{prefix}.legacy_sources 必须是非空字符串数组",
+        )
+        if isinstance(legacy_sources, list):
+            for source in legacy_sources:
+                if isinstance(source, str) and source.strip():
+                    report.check(
+                        (profile_root / source).is_file(),
+                        f"{relative}: {module_id} 的 legacy source 不存在：{source}",
+                    )
+
+        submodules = module.get("submodules")
+        report.check(
+            isinstance(submodules, list) and bool(submodules),
+            f"{prefix}.submodules 必须是数组",
+        )
+        if not isinstance(submodules, list):
+            continue
+        local_ids: set[str] = set()
+        for submodule_index, submodule in enumerate(submodules):
+            sub_prefix = f"{prefix}.submodules[{submodule_index}]"
+            if not isinstance(submodule, dict):
+                report.check(False, f"{sub_prefix} 必须是对象")
+                continue
+            submodule_id = submodule.get("id")
+            report.check(
+                isinstance(submodule_id, str) and bool(submodule_id.strip()),
+                f"{sub_prefix}.id 必须是非空字符串",
+            )
+            if not isinstance(submodule_id, str) or not submodule_id.strip():
+                continue
+            report.check(
+                submodule_id not in local_ids,
+                f"{prefix}: submodule id 重复：{submodule_id}",
+            )
+            local_ids.add(submodule_id)
+            submodule_map.add((module_id, submodule_id))
+            submodule_path = submodule.get("path")
+            if isinstance(submodule_path, str) and submodule_path.strip():
+                validate_module_document(
+                    profile_root,
+                    submodule_path,
+                    module_id,
+                    contract,
+                    report,
+                    submodule_id=submodule_id,
+                )
+
+    required_modules = set(contract["required_module_ids"])
+    report.check(
+        set(module_map) == required_modules,
+        f"{relative}: module 必须完整覆盖 {sorted(required_modules)}，"
+        f"实际为 {sorted(module_map)}",
+    )
+    health = module_map.get("health_wellbeing", {})
+    health_submodules = {
+        submodule.get("id")
+        for submodule in health.get("submodules", [])
+        if isinstance(submodule, dict)
+    }
+    required_health = set(contract["health_required_submodules"])
+    report.check(
+        health_submodules == required_health,
+        f"{relative}: health_wellbeing 必须包含 "
+        f"{sorted(required_health)}，实际为 {sorted(str(item) for item in health_submodules)}",
+    )
+    return module_map, submodule_map
+
+
+def validate_evidence(
+    profile_root: Path,
+    contract: dict[str, Any],
+    module_map: dict[str, dict[str, Any]],
+    submodule_map: set[tuple[str, str]],
+    report: Report,
+) -> None:
+    schema_path = profile_root / "evidence" / "schema.json"
+    if schema_path.is_file():
+        try:
+            schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as error:
+            report.check(False, f"evidence/schema.json 无法读取：{error}")
+        else:
+            report.check(
+                isinstance(schema, dict)
+                and isinstance(schema.get("$schema"), str)
+                and schema.get("type") == "object",
+                "evidence/schema.json: 必须是有效的对象 schema",
+            )
+
+    relative = "evidence/ledger.json"
+    path = profile_root / relative
+    if not path.is_file():
+        return
+    try:
+        ledger = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        report.check(False, f"{relative}: 无法解析 JSON：{error}")
+        return
+    report.check(
+        isinstance(ledger, dict) and ledger.get("schema_version") == SCHEMA_VERSION,
+        f"{relative}: schema_version 必须为 {SCHEMA_VERSION}",
+    )
+    records = ledger.get("records") if isinstance(ledger, dict) else None
+    report.check(isinstance(records, list), f"{relative}: records 必须是数组")
+    if not isinstance(records, list):
+        return
+    report.evidence_record_count = len(records)
+    seen_ids: set[str] = set()
+    required_fields = {
+        "id",
+        "module",
+        "submodule",
+        "type",
+        "statement",
+        "source",
+        "observed_at",
+        "last_verified",
+        "status",
+        "confidence",
+        "sensitivity",
+        "allowed_uses",
+        "linked_modules",
+        "boundary",
+    }
+    for record_index, record in enumerate(records):
+        prefix = f"{relative}: records[{record_index}]"
+        if not isinstance(record, dict):
+            report.check(False, f"{prefix} 必须是对象")
+            continue
+        missing = required_fields - set(record)
+        report.check(not missing, f"{prefix} 缺少字段 {', '.join(sorted(missing))}")
+        record_id = record.get("id")
+        report.check(
+            isinstance(record_id, str) and bool(record_id.strip()),
+            f"{prefix}.id 必须是非空字符串",
+        )
+        if isinstance(record_id, str) and record_id.strip():
+            report.check(record_id not in seen_ids, f"{prefix}.id 重复：{record_id}")
+            seen_ids.add(record_id)
+
+        module_id = record.get("module")
+        submodule_id = record.get("submodule")
+        report.check(
+            module_id in module_map,
+            f"{prefix}.module 不存在：{module_id}",
+        )
+        report.check(
+            (module_id, submodule_id) in submodule_map,
+            f"{prefix}.submodule 不属于模块：{module_id}/{submodule_id}",
+        )
+        for field_name, allowed in (
+            ("type", contract["record_types"]),
+            ("status", contract["record_statuses"]),
+            ("confidence", contract["confidence_levels"]),
+            ("sensitivity", contract["sensitivity_levels"]),
+        ):
+            report.check(
+                record.get(field_name) in allowed,
+                f"{prefix}.{field_name} 无效：{record.get(field_name)}",
+            )
+        for field_name in ("statement", "boundary"):
+            report.check(
+                isinstance(record.get(field_name), str)
+                and bool(record[field_name].strip()),
+                f"{prefix}.{field_name} 必须是非空字符串",
+            )
+        source = record.get("source")
+        report.check(
+            isinstance(source, dict)
+            and isinstance(source.get("kind"), str)
+            and isinstance(source.get("location"), str),
+            f"{prefix}.source 必须包含 kind 和 location",
+        )
+        for field_name in ("observed_at", "last_verified"):
+            validate_date_value(
+                report,
+                record.get(field_name),
+                f"{prefix}.{field_name}",
+            )
+        allowed_uses = record.get("allowed_uses")
+        report.check(
+            isinstance(allowed_uses, list)
+            and bool(allowed_uses)
+            and all(isinstance(value, str) and value.strip() for value in allowed_uses),
+            f"{prefix}.allowed_uses 必须是非空字符串数组",
+        )
+        linked = record.get("linked_modules")
+        report.check(
+            isinstance(linked, list)
+            and all(isinstance(value, str) for value in linked),
+            f"{prefix}.linked_modules 必须是字符串数组",
+        )
+        if isinstance(linked, list):
+            for linked_module in linked:
+                report.check(
+                    linked_module in module_map,
+                    f"{prefix}.linked_modules 含未知模块：{linked_module}",
+                )
+
+
+def validate_date_value(report: Report, value: Any, path: str) -> None:
+    valid = isinstance(value, str) and bool(DATE_RE.fullmatch(value))
+    if valid:
+        try:
+            date.fromisoformat(value)
+        except ValueError:
+            valid = False
+    report.check(valid, f"{path} 必须是合法的 YYYY-MM-DD 日期")
+
+
 def validate_skill_entry(skill_root: Path, report: Report) -> None:
     path = skill_root / "SKILL.md"
     if not path.is_file():
@@ -336,6 +700,19 @@ def validate_profile(skill_root: Path, profile_root: Path) -> Report:
             (profile_root / relative).is_dir(),
             f"画像目录缺少必需目录：{relative}",
         )
+
+    module_map, submodule_map = validate_profile_index(
+        profile_root,
+        contract,
+        report,
+    )
+    validate_evidence(
+        profile_root,
+        contract,
+        module_map,
+        submodule_map,
+        report,
+    )
 
     required_visibility = contract["privacy"]["required_visibility_marker"]
     main_path = profile_root / "人物画像.md"
@@ -453,6 +830,8 @@ def main(argv: list[str] | None = None) -> int:
             "errors": missing,
             "checks": 0,
             "behavior_case_count": 0,
+            "evidence_record_count": 0,
+            "modules": [],
         }
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 1
@@ -464,6 +843,8 @@ def main(argv: list[str] | None = None) -> int:
         "profile_root": str(profile_root),
         "checks": report.checks,
         "behavior_case_count": report.behavior_case_count,
+        "evidence_record_count": report.evidence_record_count,
+        "modules": sorted(report.modules),
         "errors": report.errors,
     }
     if args.json:
@@ -475,7 +856,8 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(
             f"profile validation: {report.checks} checks passed; "
-            f"{report.behavior_case_count} behavior cases"
+            f"{report.behavior_case_count} behavior cases; "
+            f"{report.evidence_record_count} evidence records"
         )
     return 1 if report.errors else 0
 

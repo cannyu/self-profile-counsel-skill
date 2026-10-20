@@ -1,0 +1,118 @@
+{
+  "schema_version": 3,
+  "profile_id": "fictional-profile",
+  "visibility": "local-only",
+  "modules": [
+    {
+      "id": "identity_context",
+      "name": "身份与生活情境",
+      "path": "modules/10_identity_context.md",
+      "submodules": [
+        {"id": "basic_identity"},
+        {"id": "life_context"}
+      ],
+      "legacy_sources": ["人物画像.md"],
+      "migration_status": "compatibility",
+      "sensitivity": "high"
+    },
+    {
+      "id": "goals_values",
+      "name": "目标、价值与优先级",
+      "path": "modules/20_goals_values.md",
+      "submodules": [
+        {"id": "goals"},
+        {"id": "decision_rules"}
+      ],
+      "legacy_sources": ["人物画像.md"],
+      "migration_status": "compatibility",
+      "sensitivity": "private"
+    },
+    {
+      "id": "health_wellbeing",
+      "name": "身心健康",
+      "path": "modules/30_health_wellbeing/physical.md",
+      "submodules": [
+        {"id": "physical", "path": "modules/30_health_wellbeing/physical.md"},
+        {"id": "mental", "path": "modules/30_health_wellbeing/mental.md"},
+        {"id": "sleep_energy", "path": "modules/30_health_wellbeing/sleep_energy.md"},
+        {"id": "lifestyle", "path": "modules/30_health_wellbeing/lifestyle.md"},
+        {"id": "care_management", "path": "modules/30_health_wellbeing/care_management.md"}
+      ],
+      "legacy_sources": ["专项档案/示例档案.md"],
+      "migration_status": "compatibility",
+      "sensitivity": "high"
+    },
+    {
+      "id": "capability_growth",
+      "name": "能力与成长",
+      "path": "modules/40_capability_growth.md",
+      "submodules": [
+        {"id": "skills"},
+        {"id": "development"}
+      ],
+      "legacy_sources": ["人物画像.md"],
+      "migration_status": "compatibility",
+      "sensitivity": "private"
+    },
+    {
+      "id": "work_career",
+      "name": "工作与职业",
+      "path": "modules/50_work_career.md",
+      "submodules": [
+        {"id": "current_work"},
+        {"id": "career_goals"}
+      ],
+      "legacy_sources": ["人物画像.md"],
+      "migration_status": "compatibility",
+      "sensitivity": "private"
+    },
+    {
+      "id": "finance_resources",
+      "name": "财务与资源",
+      "path": "modules/60_finance_resources.md",
+      "submodules": [
+        {"id": "cashflow"},
+        {"id": "resources"}
+      ],
+      "legacy_sources": ["人物画像.md"],
+      "migration_status": "compatibility",
+      "sensitivity": "high"
+    },
+    {
+      "id": "relationships_care",
+      "name": "关系与照护责任",
+      "path": "modules/70_relationships_care.md",
+      "submodules": [
+        {"id": "relationships"},
+        {"id": "care"}
+      ],
+      "legacy_sources": ["人物画像.md"],
+      "migration_status": "compatibility",
+      "sensitivity": "high"
+    },
+    {
+      "id": "behavior_psychology",
+      "name": "行为与心理模式",
+      "path": "modules/80_behavior_psychology.md",
+      "submodules": [
+        {"id": "behavior"},
+        {"id": "psychology"}
+      ],
+      "legacy_sources": ["人物画像.md"],
+      "migration_status": "compatibility",
+      "sensitivity": "high"
+    },
+    {
+      "id": "timeline_actions",
+      "name": "人生时间线与行动",
+      "path": "modules/90_timeline_actions.md",
+      "submodules": [
+        {"id": "events"},
+        {"id": "actions"}
+      ],
+      "legacy_sources": ["行动清单.md"],
+      "migration_status": "compatibility",
+      "sensitivity": "private"
+    }
+  ]
+}

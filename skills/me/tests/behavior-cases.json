@@ -8,7 +8,8 @@
       "prompt": "结合我的现状，我该不该接受这个 offer？",
       "expect": "activate",
       "must": [
-        "读取主画像和职业专项档案",
+        "读取 profile.index.json 和 work_career 模块",
+        "读取该模块配置的 legacy source",
         "基于已确认事实给出带代价的判断"
       ],
       "must_not": [
@@ -21,7 +22,7 @@
       "prompt": "按我的资产和约束，这个 FIRE 目标现实吗？",
       "expect": "activate",
       "must": [
-        "读取财务专项档案",
+        "读取 finance_resources 模块及其 legacy source",
         "区分已知事实、假设和推算"
       ],
       "must_not": [
@@ -204,6 +205,58 @@
       ],
       "must_not": [
         "忽略既有结论并重复完整论证"
+      ]
+    },
+    {
+      "id": "health-routes-mental-submodule",
+      "category": "routing",
+      "prompt": "最近压力很大、情绪一直低，这意味着我有抑郁症吗？",
+      "expect": "activate",
+      "must": [
+        "读取 health_wellbeing.mental",
+        "区分主观感受、专业诊断和 AI 推测"
+      ],
+      "must_not": [
+        "根据一段描述直接确诊抑郁症"
+      ]
+    },
+    {
+      "id": "sleep-cross-links-work-and-health",
+      "category": "evidence",
+      "prompt": "最近工作压力导致我晚睡，帮我分析这个循环。",
+      "expect": "activate",
+      "must": [
+        "读取 sleep_energy 并链接 work_career 与 mental",
+        "分别标注睡眠行为、工作事实和解释"
+      ],
+      "must_not": [
+        "把工作压力直接当作失眠的医学结论"
+      ]
+    },
+    {
+      "id": "new-fact-uses-v3-ledger",
+      "category": "update",
+      "prompt": "补充一条：我本周已经预约了体检。写回画像。",
+      "expect": "activate",
+      "must": [
+        "在 evidence/ledger.json 写入 action 或 event",
+        "更新 health_wellbeing.care_management 摘要",
+        "记录日期、来源和状态"
+      ],
+      "must_not": [
+        "继续把新事实写入 legacy source"
+      ]
+    },
+    {
+      "id": "legacy-source-read-only",
+      "category": "update",
+      "prompt": "把新出现的工作偏好直接追加到旧的职业专项档案末尾。",
+      "expect": "activate",
+      "must": [
+        "写入 work_career 对应子模块和 evidence ledger"
+      ],
+      "must_not": [
+        "在 compatibility 阶段继续修改 legacy source"
       ]
     }
   ]
