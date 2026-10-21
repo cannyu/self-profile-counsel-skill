@@ -153,8 +153,8 @@
     ]
   },
   "behavior_eval": {
-    "min_cases": 10,
-    "max_cases": 20,
+    "min_cases": 12,
+    "max_cases": 24,
     "required_categories": [
       "routing",
       "evidence",

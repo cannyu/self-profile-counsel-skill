@@ -4,11 +4,14 @@
 
 An agent skill that incrementally builds an evolving self-profile and provides
 personal decisions, small decision support, growth suggestions, and privacy-aware
-profile maintenance. Integration with cost-effective life guidance is planned.
+profile maintenance. Cost-benefit decisions can combine the local profile with
+the separate `life-decision-guide` skill without copying the guide into private
+profile data.
 
 插件提供：
 
 - `/me` 个人决策 Skill。
+- 与 `life-decision-guide` 的组合路由，依据个人约束筛选书中条目，并分开标注两套证据。
 - 人物画像数据结构与数据契约。
 - 九个内容模块、健康子模块与证据账本。
 - 更新、审计和脱敏导出的行为规则。
@@ -73,6 +76,9 @@ python3 skills/me/scripts/validate_profile.py \
 
 详细规则见
 [`skills/me/references/profile-contract.md`](skills/me/references/profile-contract.md)。
+
+高性价比决策的组合边界见
+[`skills/me/references/life-decision-guide.md`](skills/me/references/life-decision-guide.md)。
 
 ## 开发与测试
 

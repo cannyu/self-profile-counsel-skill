@@ -66,7 +66,7 @@ class ValidateProfileTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
         report = json.loads(result.stdout)
         self.assertTrue(report["ok"])
-        self.assertEqual(report["behavior_case_count"], 20)
+        self.assertEqual(report["behavior_case_count"], 24)
         self.assertEqual(set(report["modules"]), EXPECTED_MODULES)
 
     def test_environment_selects_profile_root(self) -> None:
@@ -336,7 +336,7 @@ class ValidateProfileTests(unittest.TestCase):
         }
 
         self.assertGreaterEqual(len(cases), 10)
-        self.assertLessEqual(len(cases), 20)
+        self.assertLessEqual(len(cases), 24)
         self.assertEqual(len({case["id"] for case in cases}), len(cases))
         self.assertEqual({case["category"] for case in cases}, required_categories)
 

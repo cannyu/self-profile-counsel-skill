@@ -14,6 +14,8 @@ PLUGINS_ROOT = ME_PLUGIN.parent
 class PluginLayoutTests(unittest.TestCase):
     def test_workspace_marketplace_lists_me_and_asu(self) -> None:
         marketplace_path = PLUGINS_ROOT / ".agents" / "plugins" / "marketplace.json"
+        if not marketplace_path.is_file():
+            self.skipTest("Installed cache has no sibling marketplace workspace")
         marketplace = json.loads(marketplace_path.read_text(encoding="utf-8"))
 
         self.assertEqual(marketplace["name"], "workspace-plugins")
@@ -31,7 +33,6 @@ class PluginLayoutTests(unittest.TestCase):
 
         self.assertEqual(manifest["name"], "persona-profile-skill")
         self.assertEqual(manifest["skills"], "./skills/")
-        self.assertEqual(ME_PLUGIN.name, "persona-profile-skill")
         self.assertIsInstance(manifest["author"], dict)
         self.assertTrue(manifest["author"].get("name"))
         self.assertTrue(manifest["interface"]["longDescription"])
@@ -39,6 +40,8 @@ class PluginLayoutTests(unittest.TestCase):
 
     def test_asu_plugin_preserves_manifest_and_skills(self) -> None:
         asu_plugin = PLUGINS_ROOT / "asu-skills"
+        if not asu_plugin.is_dir():
+            self.skipTest("Installed cache has no sibling asu-skills plugin")
         manifest = json.loads(
             (asu_plugin / ".codex-plugin" / "plugin.json").read_text(
                 encoding="utf-8"
@@ -69,6 +72,7 @@ class PluginLayoutTests(unittest.TestCase):
     def test_skill_has_no_personal_examples_or_home_paths(self) -> None:
         production_files = [
             ME_SKILL / "SKILL.md",
+            ME_SKILL / "references" / "life-decision-guide.md",
             ME_SKILL / "references" / "profile-contract.md",
             ME_SKILL / "references" / "profile.contract.json",
             ME_SKILL / "scripts" / "validate_profile.py",
@@ -79,6 +83,42 @@ class PluginLayoutTests(unittest.TestCase):
 
         for forbidden in ("/Users/", "his own life", "他明确"):
             self.assertNotIn(forbidden, combined)
+
+    def test_skill_routes_personal_cost_benefit_questions_to_guide(self) -> None:
+        skill_text = (ME_SKILL / "SKILL.md").read_text(encoding="utf-8")
+        adapter_path = ME_SKILL / "references" / "life-decision-guide.md"
+
+        self.assertIn("life-decision-guide", skill_text)
+        self.assertIn("references/life-decision-guide.md", skill_text)
+        self.assertTrue(adapter_path.is_file())
+
+        adapter_text = adapter_path.read_text(encoding="utf-8")
+        for expected in (
+            "画像事实",
+            "证据等级",
+            "章节与条目标题",
+            "不得写回事实层",
+            "指南不可用",
+        ):
+            self.assertIn(expected, adapter_text)
+
+    def test_behavior_corpus_covers_guide_integration_boundaries(self) -> None:
+        corpus = json.loads(
+            (ME_SKILL / "tests" / "behavior-cases.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        cases = {case["id"]: case for case in corpus["cases"]}
+        expected_ids = {
+            "guide-routes-personal-cost-benefit",
+            "guide-missing-entry-not-invented",
+            "guide-does-not-override-profile",
+            "guide-emergency-truncates-ranking",
+        }
+
+        self.assertTrue(expected_ids.issubset(cases))
+        conflict = cases["guide-does-not-override-profile"]
+        self.assertIn("不把指南建议写成个人事实", conflict["must_not"])
 
 
 if __name__ == "__main__":
